@@ -5,275 +5,178 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Shiny Pack Simulator — Pokemon</title>
 <style>
-  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&display=swap');
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:#0d0f14;color:#e0e0e0;font-family:'Inter',sans-serif;min-height:100vh;overflow-x:hidden}
 
-  * { box-sizing: border-box; margin: 0; padding: 0; }
+/* ── Layout ── */
+.app{display:flex;flex-direction:column;min-height:100vh}
+header{display:flex;align-items:center;gap:12px;padding:14px 28px;background:#12151c;border-bottom:1px solid #1e2430;z-index:10;position:relative}
+.logo{font-size:20px;font-weight:800;color:#00d4aa;letter-spacing:-.5px}
+.sub{font-size:12px;color:#6b7280}
+.main{display:flex;gap:0;flex:1;overflow:hidden}
 
-  body {
-    background: #0d0f14;
-    color: #e0e0e0;
-    font-family: 'Inter', sans-serif;
-    min-height: 100vh;
-  }
+/* ── Pack Selector ── */
+.pack-selector{width:220px;min-width:220px;background:#12151c;border-right:1px solid #1e2430;padding:20px 14px;display:flex;flex-direction:column;gap:7px;overflow-y:auto}
+.pack-selector h3{font-size:10px;color:#6b7280;text-transform:uppercase;letter-spacing:1px;margin-bottom:6px}
+.pack-btn{width:100%;padding:10px 12px;background:#1a1f2e;border:1px solid #1e2430;border-radius:10px;cursor:pointer;text-align:left;transition:all .2s;position:relative}
+.pack-btn:hover{border-color:#00d4aa44;background:#1e2535}
+.pack-btn.active{border-color:#00d4aa;background:#0d2320}
+.pack-btn .pack-name{font-size:12px;font-weight:600;color:#e0e0e0}
+.pack-btn .pack-price{font-size:17px;font-weight:800;color:#00d4aa;margin-top:1px}
+.pack-btn .pack-ev{font-size:10px;color:#6b7280;margin-top:3px}
+.pack-btn .pack-roe{position:absolute;top:9px;right:9px;font-size:10px;font-weight:700;background:#0d2320;color:#00d4aa;padding:2px 6px;border-radius:20px;border:1px solid #00d4aa44}
+.odds-grid{display:flex;flex-direction:column;gap:5px}
+.odds-row{display:flex;align-items:center;gap:6px}
+.odds-tier-tag{font-size:10px;font-weight:700;width:52px;flex-shrink:0}
+.odds-bar-bg{flex:1;height:3px;background:#1e2430;border-radius:2px;overflow:hidden}
+.odds-bar-fill{height:100%;border-radius:2px}
+.odds-pct{font-size:10px;color:#6b7280;width:36px;text-align:right;flex-shrink:0}
 
-  /* ── Layout ── */
-  .app { display: flex; flex-direction: column; min-height: 100vh; }
+/* ── Center Stage ── */
+.stage{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:24px;gap:20px;position:relative;overflow:hidden}
 
-  header {
-    display: flex; align-items: center; gap: 12px;
-    padding: 16px 32px;
-    background: #12151c;
-    border-bottom: 1px solid #1e2430;
-  }
-  header .logo { font-size: 22px; font-weight: 800; color: #00d4aa; letter-spacing: -0.5px; }
-  header .sub  { font-size: 13px; color: #6b7280; }
+/* Pack visual */
+.pack-visual{width:180px;height:252px;background:linear-gradient(135deg,#1a2040 0%,#0e1525 50%,#1a2040 100%);border-radius:14px;border:1px solid #2a3555;display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden;box-shadow:0 0 60px #00d4aa22,0 20px 60px #00000080;cursor:default}
+.pack-visual::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,transparent 40%,#00d4aa08 100%)}
+.pack-visual .pack-gem{font-size:56px;filter:drop-shadow(0 0 20px #00d4aa66)}
+.pack-visual .pack-label{position:absolute;bottom:16px;font-size:11px;font-weight:700;color:#00d4aa;letter-spacing:2px;text-transform:uppercase}
 
-  .main { display: flex; gap: 0; flex: 1; }
+@keyframes shake{0%,100%{transform:rotate(0) scale(1)}15%{transform:rotate(-5deg) scale(1.03)}35%{transform:rotate(5deg) scale(1.06)}55%{transform:rotate(-4deg) scale(1.05)}75%{transform:rotate(4deg) scale(1.03)}90%{transform:rotate(-2deg) scale(1.01)}}
+@keyframes float{0%,100%{transform:translateY(0)}50%{transform:translateY(-8px)}}
+@keyframes revealCard{0%{opacity:0;transform:scale(.5) rotateY(90deg) translateY(20px)}60%{transform:scale(1.05) rotateY(-6deg) translateY(-5px)}100%{opacity:1;transform:scale(1) rotateY(0) translateY(0)}}
+@keyframes shimmer{0%{background-position:-200% center}100%{background-position:200% center}}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.6}}
+@keyframes particleFly{0%{opacity:1;transform:translate(0,0) scale(1)}100%{opacity:0;transform:translate(var(--tx),var(--ty)) scale(0)}}
 
-  /* ── Pack Selector ── */
-  .pack-selector {
-    width: 240px; min-width: 240px;
-    background: #12151c;
-    border-right: 1px solid #1e2430;
-    padding: 24px 16px;
-    display: flex; flex-direction: column; gap: 8px;
-  }
-  .pack-selector h3 { font-size: 11px; color: #6b7280; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 8px; }
-  .pack-btn {
-    width: 100%; padding: 12px 14px;
-    background: #1a1f2e; border: 1px solid #1e2430;
-    border-radius: 10px; cursor: pointer; text-align: left;
-    transition: all .2s; position: relative; overflow: hidden;
-  }
-  .pack-btn:hover { border-color: #00d4aa44; background: #1e2535; }
-  .pack-btn.active { border-color: #00d4aa; background: #0d2320; }
-  .pack-btn .pack-name { font-size: 13px; font-weight: 600; color: #e0e0e0; }
-  .pack-btn .pack-price { font-size: 18px; font-weight: 800; color: #00d4aa; margin-top: 2px; }
-  .pack-btn .pack-ev { font-size: 11px; color: #6b7280; margin-top: 4px; }
-  .pack-btn .pack-roe {
-    position: absolute; top: 10px; right: 10px;
-    font-size: 11px; font-weight: 700;
-    background: #0d2320; color: #00d4aa;
-    padding: 2px 7px; border-radius: 20px;
-    border: 1px solid #00d4aa44;
-  }
+/* Platinum EPIC animation */
+@keyframes platBeam{0%{opacity:0;transform:scaleY(0)}30%{opacity:1;transform:scaleY(1)}100%{opacity:0;transform:scaleY(1)}}
+@keyframes platFlash{0%{opacity:0}20%{opacity:.6}100%{opacity:0}}
+@keyframes platReveal{0%{opacity:0;transform:scale(.3) rotateY(180deg)}50%{transform:scale(1.1) rotateY(-10deg)}70%{transform:scale(.97) rotateY(5deg)}100%{opacity:1;transform:scale(1) rotateY(0)}}
+@keyframes platText{0%{opacity:0;transform:scale(3) translateY(-20px);filter:blur(10px)}60%{opacity:1;filter:blur(0)}100%{opacity:1;transform:scale(1) translateY(0)}}
+@keyframes platRing{0%{opacity:1;transform:translate(-50%,-50%) scale(.5)}100%{opacity:0;transform:translate(-50%,-50%) scale(2.5)}}
+@keyframes silverSpin{0%{transform:translate(-50%,-50%) rotate(0)}100%{transform:translate(-50%,-50%) rotate(360deg)}}
 
-  /* ── Center Stage ── */
-  .stage {
-    flex: 1; display: flex; flex-direction: column;
-    align-items: center; justify-content: center;
-    padding: 32px; gap: 24px; position: relative;
-  }
+/* Shiny EPIC animation */
+@keyframes shinyReveal{0%{opacity:0;transform:scale(.2) rotate(-15deg)}40%{transform:scale(1.15) rotate(3deg)}70%{transform:scale(.98) rotate(-1deg)}100%{opacity:1;transform:scale(1) rotate(0)}}
+@keyframes rainbowShift{0%{filter:hue-rotate(0deg) brightness(1.2)}50%{filter:hue-rotate(180deg) brightness(1.5)}100%{filter:hue-rotate(360deg) brightness(1.2)}}
+@keyframes starPulse{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.3);opacity:.8}}
 
-  /* Pack visual */
-  .pack-visual {
-    width: 200px; height: 280px;
-    background: linear-gradient(135deg, #1a2040 0%, #0e1525 50%, #1a2040 100%);
-    border-radius: 16px;
-    border: 1px solid #2a3555;
-    display: flex; align-items: center; justify-content: center;
-    font-size: 48px;
-    position: relative; overflow: hidden;
-    transition: transform .3s;
-    box-shadow: 0 0 60px #00d4aa22, 0 20px 60px #00000080;
-    cursor: default;
-  }
-  .pack-visual::before {
-    content: '';
-    position: absolute; inset: 0;
-    background: linear-gradient(135deg, transparent 40%, #00d4aa08 100%);
-  }
-  .pack-visual .pack-label {
-    position: absolute; bottom: 20px;
-    font-size: 12px; font-weight: 700; color: #00d4aa;
-    letter-spacing: 2px; text-transform: uppercase;
-  }
-  .pack-visual .pack-gem { font-size: 64px; filter: drop-shadow(0 0 20px #00d4aa66); }
+.pack-visual.shaking{animation:shake .7s ease-in-out}
+.pack-visual.floating{animation:float 3s ease-in-out infinite}
 
-  @keyframes shake {
-    0%,100% { transform: rotate(0deg) scale(1); }
-    10%      { transform: rotate(-4deg) scale(1.02); }
-    30%      { transform: rotate(4deg) scale(1.04); }
-    50%      { transform: rotate(-3deg) scale(1.06); }
-    70%      { transform: rotate(3deg) scale(1.04); }
-    90%      { transform: rotate(-2deg) scale(1.02); }
-  }
-  @keyframes reveal {
-    0%   { opacity: 0; transform: scale(.6) rotateY(90deg); }
-    60%  { transform: scale(1.08) rotateY(-5deg); }
-    100% { opacity: 1; transform: scale(1) rotateY(0deg); }
-  }
-  @keyframes shimmer {
-    0%   { background-position: -200% center; }
-    100% { background-position: 200% center; }
-  }
-  @keyframes float { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-8px); } }
+/* ── Cinematic Overlay ── */
+.cinematic-overlay{position:fixed;inset:0;z-index:1000;pointer-events:none;display:none}
+.cinematic-overlay.show{display:block}
 
-  .pack-visual.shaking { animation: shake .6s ease-in-out; }
-  .pack-visual.floating { animation: float 3s ease-in-out infinite; }
+/* Platinum overlay */
+.plat-flash{position:absolute;inset:0;background:radial-gradient(ellipse at center,#ffffff 0%,#c0c0c0 30%,transparent 70%);opacity:0}
+.plat-beams{position:absolute;inset:0;overflow:hidden}
+.plat-beam{position:absolute;top:50%;left:50%;width:3px;height:120vh;background:linear-gradient(to bottom,transparent,#c0c0c0,#ffffff,#c0c0c0,transparent);transform-origin:top center;opacity:0}
+.plat-ring{position:absolute;top:50%;left:50%;width:300px;height:300px;border:2px solid #c0c0c0;border-radius:50%;transform:translate(-50%,-50%) scale(.5);opacity:0}
+.plat-title{position:absolute;top:30%;left:50%;transform:translateX(-50%);font-size:52px;font-weight:900;color:#c0c0c0;text-shadow:0 0 40px #fff,0 0 80px #c0c0c0;letter-spacing:8px;opacity:0;white-space:nowrap;text-align:center}
+.plat-subtitle{position:absolute;top:calc(30% + 70px);left:50%;transform:translateX(-50%);font-size:14px;font-weight:700;color:#e0e0e0;letter-spacing:4px;opacity:0;white-space:nowrap}
 
-  /* Result card */
-  .result-card {
-    display: none; width: 260px;
-    border-radius: 16px; padding: 24px 20px;
-    text-align: center; animation: reveal .5s ease-out forwards;
-    position: relative; overflow: hidden;
-  }
-  .result-card.show { display: block; }
+/* Shiny overlay */
+.shiny-flash{position:absolute;inset:0;background:radial-gradient(ellipse at center,#ffffff 0%,#9f46ff 20%,#00d4aa 50%,transparent 70%);opacity:0}
+.shiny-title{position:absolute;top:25%;left:50%;transform:translateX(-50%);font-size:60px;font-weight:900;background:linear-gradient(135deg,#9f46ff,#00d4aa,#ffd700,#ff6b6b,#9f46ff);background-size:200%;-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text;letter-spacing:6px;opacity:0;white-space:nowrap;text-align:center;animation:shimmer 1s linear infinite}
+.shiny-subtitle{position:absolute;top:calc(25% + 80px);left:50%;transform:translateX(-50%);font-size:14px;font-weight:700;color:#c97bff;letter-spacing:5px;opacity:0;white-space:nowrap}
 
-  .result-card::before {
-    content: '';
-    position: absolute; inset: 0;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,.1), transparent);
-    background-size: 200%;
-    animation: shimmer 2s linear infinite;
-  }
+/* ── Result Card ── */
+.result-area{display:none;align-items:center;gap:24px;animation:revealCard .5s ease-out forwards}
+.result-area.show{display:flex}
 
-  .tier-S { background: linear-gradient(135deg, #1a0a2e, #2d1060); border: 2px solid #9f46ff; box-shadow: 0 0 30px #9f46ff44; }
-  .tier-A { background: linear-gradient(135deg, #1a1520, #2a1f3a); border: 2px solid #c0c0c0; box-shadow: 0 0 20px #c0c0c022; }
-  .tier-B { background: linear-gradient(135deg, #1a1208, #2a1f08); border: 2px solid #ffd700; box-shadow: 0 0 20px #ffd70033; }
-  .tier-C { background: linear-gradient(135deg, #0a121a, #0f1e2a); border: 2px solid #4a9eff; box-shadow: 0 0 20px #4a9eff22; }
-  .tier-D { background: linear-gradient(135deg, #1a1008, #2a1808); border: 2px solid #cd7f32; box-shadow: 0 0 15px #cd7f3222; }
+/* Card image container */
+.card-img-wrap{position:relative;width:160px;flex-shrink:0}
+.card-img{width:160px;height:224px;border-radius:10px;object-fit:cover;display:block;box-shadow:0 8px 32px #00000080}
+.card-img-placeholder{width:160px;height:224px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:48px;background:#1a1f2e;border:1px solid #2a3040}
+.card-img-loading{width:160px;height:224px;border-radius:10px;background:linear-gradient(90deg,#1a1f2e,#2a3040,#1a1f2e);background-size:200%;animation:shimmer 1.5s linear infinite;display:flex;align-items:center;justify-content:center;color:#6b7280;font-size:12px}
+.card-grade-badge{position:absolute;bottom:-8px;right:-8px;background:#ffd700;color:#0d0f14;font-size:11px;font-weight:800;padding:4px 10px;border-radius:20px;box-shadow:0 2px 10px #ffd70066}
 
-  .result-tier-badge {
-    display: inline-block; padding: 4px 14px; border-radius: 20px;
-    font-size: 12px; font-weight: 700; letter-spacing: 1px;
-    margin-bottom: 12px;
-  }
-  .tier-S .result-tier-badge { background: #9f46ff33; color: #c97bff; border: 1px solid #9f46ff66; }
-  .tier-A .result-tier-badge { background: #c0c0c022; color: #e0e0e0; border: 1px solid #c0c0c044; }
-  .tier-B .result-tier-badge { background: #ffd70022; color: #ffd700; border: 1px solid #ffd70044; }
-  .tier-C .result-tier-badge { background: #4a9eff22; color: #7ab8ff; border: 1px solid #4a9eff44; }
-  .tier-D .result-tier-badge { background: #cd7f3222; color: #e0a060; border: 1px solid #cd7f3244; }
+/* Result info panel */
+.result-info{display:flex;flex-direction:column;gap:10px;min-width:180px;max-width:220px}
+.result-tier-badge{display:inline-block;padding:4px 12px;border-radius:20px;font-size:11px;font-weight:700;letter-spacing:1px;width:fit-content}
+.result-card-name{font-size:16px;font-weight:800;color:#e0e0e0;line-height:1.3}
+.result-set-name{font-size:11px;color:#6b7280}
+.result-value-big{font-size:32px;font-weight:800}
+.result-value-label{font-size:11px;color:#9ca3af;margin-top:-6px}
+.result-bonus{display:inline-flex;align-items:center;gap:6px;background:#00d4aa15;color:#00d4aa;border:1px solid #00d4aa33;padding:5px 10px;border-radius:8px;font-size:12px;font-weight:600;margin-top:2px}
 
-  .result-value {
-    font-size: 36px; font-weight: 800; margin: 8px 0 4px;
-  }
-  .tier-S .result-value { color: #c97bff; }
-  .tier-A .result-value { color: #e0e0e0; }
-  .tier-B .result-value { color: #ffd700; }
-  .tier-C .result-value { color: #7ab8ff; }
-  .tier-D .result-value { color: #e0a060; }
+/* Tier color themes */
+.tier-S .result-tier-badge{background:#9f46ff22;color:#c97bff;border:1px solid #9f46ff55}
+.tier-S .result-value-big{color:#c97bff}
+.tier-S .card-img{box-shadow:0 0 30px #9f46ff55,0 8px 32px #00000080;animation:rainbowShift 3s linear infinite}
+.tier-A .result-tier-badge{background:#c0c0c022;color:#e8e8e8;border:1px solid #c0c0c055}
+.tier-A .result-value-big{color:#e8e8e8}
+.tier-A .card-img{box-shadow:0 0 25px #ffffff44,0 8px 32px #00000080}
+.tier-B .result-tier-badge{background:#ffd70022;color:#ffd700;border:1px solid #ffd70055}
+.tier-B .result-value-big{color:#ffd700}
+.tier-B .card-img{box-shadow:0 0 20px #ffd70044,0 8px 32px #00000080}
+.tier-C .result-tier-badge{background:#4a9eff22;color:#7ab8ff;border:1px solid #4a9eff55}
+.tier-C .result-value-big{color:#7ab8ff}
+.tier-D .result-tier-badge{background:#cd7f3222;color:#e0a060;border:1px solid #cd7f3255}
+.tier-D .result-value-big{color:#e0a060}
 
-  .result-label { font-size: 13px; color: #9ca3af; }
-  .result-emoji { font-size: 40px; margin-bottom: 8px; }
+/* Open button */
+.open-btn{padding:13px 44px;font-size:15px;font-weight:700;background:linear-gradient(135deg,#00d4aa,#00a888);color:#0d0f14;border:none;border-radius:12px;cursor:pointer;transition:all .2s;letter-spacing:.5px;box-shadow:0 4px 20px #00d4aa44}
+.open-btn:hover{transform:translateY(-2px);box-shadow:0 8px 30px #00d4aa55}
+.open-btn:disabled{opacity:.5;cursor:not-allowed;transform:none}
+.qty-btns{display:flex;gap:7px}
+.qty-btn{padding:7px 18px;font-size:13px;font-weight:600;background:#1a1f2e;border:1px solid #2a3040;color:#9ca3af;border-radius:8px;cursor:pointer;transition:all .2s}
+.qty-btn.active,.qty-btn:hover{background:#1e2535;border-color:#00d4aa66;color:#00d4aa}
 
-  .bonus-tag {
-    display: inline-block; margin-top: 10px;
-    background: #00d4aa22; color: #00d4aa;
-    border: 1px solid #00d4aa44;
-    padding: 4px 12px; border-radius: 20px;
-    font-size: 12px; font-weight: 600;
-  }
+/* Progress */
+.auto-progress{display:none}
+.auto-progress.show{display:block}
+.progress-bar-bg{height:4px;background:#1e2430;border-radius:2px;margin-top:7px;width:200px}
+.progress-bar-fill{height:100%;background:#00d4aa;border-radius:2px;transition:width .15s linear}
 
-  /* Open button */
-  .open-btn {
-    padding: 14px 48px; font-size: 16px; font-weight: 700;
-    background: linear-gradient(135deg, #00d4aa, #00a888);
-    color: #0d0f14; border: none; border-radius: 12px;
-    cursor: pointer; transition: all .2s;
-    letter-spacing: .5px;
-    box-shadow: 0 4px 20px #00d4aa44;
-  }
-  .open-btn:hover { transform: translateY(-2px); box-shadow: 0 8px 30px #00d4aa55; }
-  .open-btn:active { transform: translateY(0); }
-  .open-btn:disabled { opacity: .5; cursor: not-allowed; transform: none; }
+/* ── Stats Panel ── */
+.stats-panel{width:270px;min-width:270px;background:#12151c;border-left:1px solid #1e2430;padding:20px 16px;display:flex;flex-direction:column;gap:16px;overflow-y:auto}
+.stats-panel h3{font-size:10px;color:#6b7280;text-transform:uppercase;letter-spacing:1px}
+.stat-row{display:flex;justify-content:space-between;align-items:center}
+.stat-label{font-size:12px;color:#9ca3af}
+.stat-value{font-size:14px;font-weight:700;color:#e0e0e0}
+.stat-value.green{color:#00d4aa}
+.stat-value.red{color:#ff6b6b}
+.roe-bar-wrap{margin-top:4px}
+.roe-bar-bg{height:5px;background:#1e2430;border-radius:3px;overflow:hidden}
+.roe-bar{height:100%;border-radius:3px;transition:width .6s ease}
+.roe-bar.pos{background:linear-gradient(90deg,#00d4aa,#00a888)}
+.roe-bar.neg{background:linear-gradient(90deg,#ff6b6b,#cc4444)}
+.divider{border:none;border-top:1px solid #1e2430}
 
-  .qty-btns { display: flex; gap: 8px; }
-  .qty-btn {
-    padding: 8px 20px; font-size: 14px; font-weight: 600;
-    background: #1a1f2e; border: 1px solid #2a3040;
-    color: #9ca3af; border-radius: 8px; cursor: pointer; transition: all .2s;
-  }
-  .qty-btn.active, .qty-btn:hover { background: #1e2535; border-color: #00d4aa66; color: #00d4aa; }
+/* Distribution */
+.dist-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px}
+.dist-cell{background:#1a1f2e;border-radius:7px;padding:7px;text-align:center}
+.dc-tier{font-size:10px;font-weight:700}
+.dc-count{font-size:17px;font-weight:800;color:#e0e0e0}
+.dc-pct{font-size:9px;color:#6b7280}
 
-  /* ── Stats sidebar ── */
-  .stats-panel {
-    width: 280px; min-width: 280px;
-    background: #12151c;
-    border-left: 1px solid #1e2430;
-    padding: 24px 20px;
-    display: flex; flex-direction: column; gap: 20px;
-    overflow-y: auto;
-  }
-  .stats-panel h3 { font-size: 11px; color: #6b7280; text-transform: uppercase; letter-spacing: 1px; }
+/* History */
+.history-list{display:flex;flex-direction:column;gap:5px;max-height:260px;overflow-y:auto}
+.history-item{display:flex;align-items:center;gap:8px;padding:7px 9px;border-radius:7px;background:#1a1f2e;border:1px solid #1e2430;font-size:11px;animation:slideIn .2s ease-out}
+@keyframes slideIn{from{opacity:0;transform:translateX(20px)}to{opacity:1;transform:translateX(0)}}
+.history-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.dot-S{background:#9f46ff;box-shadow:0 0 6px #9f46ff}
+.dot-A{background:#c0c0c0;box-shadow:0 0 4px #ffffff66}
+.dot-B{background:#ffd700}
+.dot-C{background:#4a9eff}
+.dot-D{background:#cd7f32}
+.hist-name{flex:1;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:#c0c0c8}
+.hist-S{color:#c97bff;font-weight:700}
+.hist-A{color:#e8e8e8;font-weight:700}
+.hist-B{color:#ffd700;font-weight:700}
+.hist-C{color:#7ab8ff;font-weight:700}
+.hist-D{color:#e0a060;font-weight:700}
+.history-val{font-weight:700;color:#e0e0e0;flex-shrink:0}
+.history-bonus-tag{color:#00d4aa;font-size:9px;flex-shrink:0}
+.empty-history{font-size:11px;color:#4b5563;text-align:center;padding:16px 0}
 
-  .stat-row { display: flex; justify-content: space-between; align-items: center; }
-  .stat-label { font-size: 13px; color: #9ca3af; }
-  .stat-value { font-size: 15px; font-weight: 700; color: #e0e0e0; }
-  .stat-value.green { color: #00d4aa; }
-  .stat-value.red   { color: #ff6b6b; }
-  .stat-value.gold  { color: #ffd700; }
-
-  .roe-bar-wrap { margin-top: 4px; }
-  .roe-bar-bg { height: 6px; background: #1e2430; border-radius: 3px; overflow: hidden; }
-  .roe-bar { height: 100%; border-radius: 3px; transition: width .6s ease; }
-  .roe-bar.pos { background: linear-gradient(90deg, #00d4aa, #00a888); }
-  .roe-bar.neg { background: linear-gradient(90deg, #ff6b6b, #cc4444); }
-
-  .divider { border: none; border-top: 1px solid #1e2430; }
-
-  /* History */
-  .history-list {
-    display: flex; flex-direction: column; gap: 6px;
-    max-height: 320px; overflow-y: auto;
-  }
-  .history-item {
-    display: flex; align-items: center; gap: 10px;
-    padding: 8px 10px; border-radius: 8px;
-    background: #1a1f2e; border: 1px solid #1e2430;
-    font-size: 12px;
-    animation: slideIn .2s ease-out;
-  }
-  @keyframes slideIn { from { opacity:0; transform: translateX(20px); } to { opacity:1; transform: translateX(0); } }
-  .history-dot { width: 10px; height: 10px; border-radius: 50%; flex-shrink: 0; }
-  .dot-S { background: #9f46ff; box-shadow: 0 0 6px #9f46ff; }
-  .dot-A { background: #c0c0c0; }
-  .dot-B { background: #ffd700; }
-  .dot-C { background: #4a9eff; }
-  .dot-D { background: #cd7f32; }
-  .history-tier { font-weight: 700; flex-shrink: 0; }
-  .hist-S { color: #c97bff; }
-  .hist-A { color: #e0e0e0; }
-  .hist-B { color: #ffd700; }
-  .hist-C { color: #7ab8ff; }
-  .hist-D { color: #e0a060; }
-  .history-val { font-weight: 600; color: #e0e0e0; margin-left: auto; }
-  .history-bonus { color: #00d4aa; font-size: 10px; }
-
-  /* Odds display */
-  .odds-grid { display: flex; flex-direction: column; gap: 6px; }
-  .odds-row { display: flex; align-items: center; gap: 8px; }
-  .odds-tier-tag { font-size: 11px; font-weight: 700; width: 56px; flex-shrink: 0; }
-  .odds-bar-bg { flex: 1; height: 4px; background: #1e2430; border-radius: 2px; overflow: hidden; }
-  .odds-bar-fill { height: 100%; border-radius: 2px; }
-  .odds-pct { font-size: 11px; color: #6b7280; width: 38px; text-align: right; flex-shrink: 0; }
-
-  /* Auto-open progress */
-  .auto-progress { display: none; }
-  .auto-progress.show { display: block; }
-  .progress-bar-bg { height: 4px; background: #1e2430; border-radius: 2px; margin-top: 8px; }
-  .progress-bar-fill { height: 100%; background: #00d4aa; border-radius: 2px; transition: width .1s linear; }
-
-  /* Particles */
-  .particles { position: absolute; inset: 0; pointer-events: none; overflow: hidden; }
-  .particle {
-    position: absolute; border-radius: 50%;
-    animation: particle-fly 1s ease-out forwards;
-  }
-  @keyframes particle-fly {
-    0%   { opacity: 1; transform: translate(0,0) scale(1); }
-    100% { opacity: 0; transform: translate(var(--tx), var(--ty)) scale(0); }
-  }
-
-  .empty-history { font-size: 12px; color: #4b5563; text-align: center; padding: 20px 0; }
-
-  /* Tier distribution */
-  .dist-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
-  .dist-cell { background: #1a1f2e; border-radius: 8px; padding: 8px; text-align: center; }
-  .dist-cell .dc-tier { font-size: 11px; font-weight: 700; }
-  .dist-cell .dc-count { font-size: 18px; font-weight: 800; color: #e0e0e0; }
-  .dist-cell .dc-pct { font-size: 10px; color: #6b7280; }
+/* Particles */
+.particles{position:absolute;inset:0;pointer-events:none;overflow:hidden;z-index:5}
+.particle{position:absolute;border-radius:50%;animation:particleFly 1s ease-out forwards}
+.particle.star{border-radius:0;clip-path:polygon(50% 0%,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%)}
 </style>
 </head>
 <body>
@@ -281,9 +184,22 @@
   <header>
     <div>
       <div class="logo">⚡ SHINY Simulator</div>
-      <div class="sub">Pack Opening Simulator — Data from shiny.com API</div>
+      <div class="sub">Pokemon Pack Opening · Data from shiny.com API · Cards via Pokemon TCG API</div>
     </div>
   </header>
+
+  <!-- Cinematic Overlay -->
+  <div class="cinematic-overlay" id="cinematic">
+    <div class="plat-flash" id="platFlash"></div>
+    <div class="plat-beams" id="platBeams"></div>
+    <div class="plat-ring" id="platRing1"></div>
+    <div class="plat-ring" id="platRing2"></div>
+    <div class="plat-title" id="platTitle"></div>
+    <div class="plat-subtitle" id="platSubtitle"></div>
+    <div class="shiny-flash" id="shinyFlash"></div>
+    <div class="shiny-title" id="shinyTitle"></div>
+    <div class="shiny-subtitle" id="shinySubtitle"></div>
+  </div>
 
   <div class="main">
     <!-- Pack Selector -->
@@ -313,8 +229,7 @@
         <div class="pack-ev">EV: $106.50</div>
         <div class="pack-roe">+6.5%</div>
       </button>
-
-      <hr class="divider" style="margin:8px 0">
+      <hr style="border:none;border-top:1px solid #1e2430;margin:6px 0">
       <h3>Live Odds</h3>
       <div class="odds-grid" id="odds-display"></div>
     </div>
@@ -324,8 +239,8 @@
       <div class="particles" id="particles"></div>
 
       <div style="text-align:center">
-        <div style="font-size:13px;color:#6b7280;margin-bottom:4px" id="pack-name-label">Pokemon Beginner Pack</div>
-        <div style="font-size:11px;color:#4b5563" id="pack-pool-label">234 Shiny · 418 Platinum · 148 Gold · 149 Silver · 129 Bronze in pool</div>
+        <div style="font-size:12px;color:#6b7280;margin-bottom:3px" id="pack-name-label">Pokemon Beginner Pack</div>
+        <div style="font-size:10px;color:#4b5563" id="pack-pool-label">234 Shiny · 422 Platinum · 146 Gold · 148 Silver · 131 Bronze in pool</div>
       </div>
 
       <div class="pack-visual floating" id="pack-visual">
@@ -333,50 +248,53 @@
         <div class="pack-label">SHINY</div>
       </div>
 
-      <div class="result-card" id="result-card">
-        <div class="result-emoji" id="res-emoji"></div>
-        <div class="result-tier-badge" id="res-tier"></div>
-        <div class="result-value" id="res-value"></div>
-        <div class="result-label" id="res-label"></div>
-        <div id="res-bonus"></div>
+      <!-- Result -->
+      <div class="result-area" id="result-area">
+        <div class="card-img-wrap" id="card-img-wrap">
+          <div class="card-img-loading" id="card-img-loading">Loading...</div>
+        </div>
+        <div class="result-info" id="result-info">
+          <div class="result-tier-badge" id="res-tier"></div>
+          <div class="result-card-name" id="res-name"></div>
+          <div class="result-set-name" id="res-set"></div>
+          <div class="result-value-big" id="res-value"></div>
+          <div class="result-value-label">Estimated Market Value</div>
+          <div id="res-bonus"></div>
+        </div>
       </div>
 
-      <div style="display:flex;flex-direction:column;align-items:center;gap:12px">
+      <div style="display:flex;flex-direction:column;align-items:center;gap:10px">
         <div class="qty-btns">
           <button class="qty-btn active" onclick="setQty(1)" id="qty-1">×1</button>
           <button class="qty-btn" onclick="setQty(3)" id="qty-3">×3</button>
           <button class="qty-btn" onclick="setQty(5)" id="qty-5">×5</button>
           <button class="qty-btn" onclick="setQty(10)" id="qty-10">×10</button>
         </div>
-        <button class="open-btn" id="open-btn" onclick="openPack()">Open Pack</button>
+        <button class="open-btn" id="open-btn" onclick="openPacks()">Open Pack ($15)</button>
         <div class="auto-progress" id="auto-progress">
-          <div style="font-size:12px;color:#6b7280;text-align:center" id="auto-label"></div>
+          <div style="font-size:11px;color:#6b7280;text-align:center" id="auto-label"></div>
           <div class="progress-bar-bg"><div class="progress-bar-fill" id="progress-fill" style="width:0%"></div></div>
         </div>
       </div>
     </div>
 
-    <!-- Stats -->
+    <!-- Stats Panel -->
     <div class="stats-panel">
       <div>
-        <h3 style="margin-bottom:12px">Session Stats</h3>
-        <div style="display:flex;flex-direction:column;gap:8px">
+        <h3 style="margin-bottom:10px">Session Stats</h3>
+        <div style="display:flex;flex-direction:column;gap:7px">
           <div class="stat-row"><span class="stat-label">Packs Opened</span><span class="stat-value" id="stat-count">0</span></div>
           <div class="stat-row"><span class="stat-label">Total Spent</span><span class="stat-value" id="stat-spent">$0</span></div>
           <div class="stat-row"><span class="stat-label">Total Return</span><span class="stat-value" id="stat-return">$0</span></div>
           <div class="stat-row"><span class="stat-label">Net P&L</span><span class="stat-value" id="stat-pnl">$0</span></div>
           <div class="stat-row"><span class="stat-label">Actual ROE</span><span class="stat-value" id="stat-roe">—</span></div>
         </div>
-        <div class="roe-bar-wrap">
-          <div class="roe-bar-bg"><div class="roe-bar pos" id="roe-bar" style="width:0%"></div></div>
-        </div>
+        <div class="roe-bar-wrap"><div class="roe-bar-bg"><div class="roe-bar pos" id="roe-bar" style="width:0%"></div></div></div>
       </div>
-
       <hr class="divider">
-
       <div>
-        <h3 style="margin-bottom:10px">Tier Distribution</h3>
-        <div class="dist-grid" id="dist-grid">
+        <h3 style="margin-bottom:9px">Tier Distribution</h3>
+        <div class="dist-grid">
           <div class="dist-cell"><div class="dc-tier hist-S">✨ Shiny</div><div class="dc-count" id="dist-S">0</div><div class="dc-pct" id="dpct-S">—</div></div>
           <div class="dist-cell"><div class="dc-tier hist-A">🥈 Platinum</div><div class="dc-count" id="dist-A">0</div><div class="dc-pct" id="dpct-A">—</div></div>
           <div class="dist-cell"><div class="dc-tier hist-B">🥇 Gold</div><div class="dc-count" id="dist-B">0</div><div class="dc-pct" id="dpct-B">—</div></div>
@@ -385,110 +303,182 @@
           <div class="dist-cell"><div class="dc-tier" style="color:#00d4aa">⭐ Bonus</div><div class="dc-count" id="dist-bonus">0</div><div class="dc-pct" id="dpct-bonus">—</div></div>
         </div>
       </div>
-
       <hr class="divider">
-
       <div>
-        <h3 style="margin-bottom:10px">Recent Pulls</h3>
-        <div class="history-list" id="history-list">
-          <div class="empty-history">No pulls yet. Open a pack!</div>
-        </div>
+        <h3 style="margin-bottom:9px">Recent Pulls</h3>
+        <div class="history-list" id="history-list"><div class="empty-history">No pulls yet. Open a pack!</div></div>
       </div>
     </div>
   </div>
 </div>
 
 <script>
-// ── Pack Data (from shiny.com API) ──
+// ══════════════════════════════════════════
+//  PACK DATA (from shiny.com API)
+// ══════════════════════════════════════════
 const PACKS = {
   Beginner: {
-    name: 'Pokemon Beginner Pack', price: 15, ev: 15.90,
-    pool: { S: 234, A: 418, B: 148, C: 149, D: 129 },
-    tiers: {
-      S: { label: 'Shiny',    avg: 122.54, lo: 75,   hi: 250,  odds: 0.005 },
-      A: { label: 'Platinum', avg: 23.71,  lo: 20,   hi: 30,   odds: 0.019398 },
-      B: { label: 'Gold',     avg: 18.06,  lo: 16.5, hi: 20,   odds: 0.225602 },
-      C: { label: 'Silver',   avg: 14.93,  lo: 13.5, hi: 16.5, odds: 0.15 },
-      D: { label: 'Bronze',   avg: 12.69,  lo: 12.5, hi: 13.5, odds: 0.60 },
+    name:'Pokemon Beginner Pack', price:15, ev:15.90,
+    pool:{S:234,A:422,B:146,C:148,D:131},
+    tiers:{
+      S:{label:'Shiny',    avg:122.5, lo:75,   hi:250,  odds:0.005},
+      A:{label:'Platinum', avg:23.72, lo:20,   hi:30,   odds:0.01889},
+      B:{label:'Gold',     avg:18.08, lo:16.5, hi:20,   odds:0.22611},
+      C:{label:'Silver',   avg:14.92, lo:13.5, hi:16.5, odds:0.15},
+      D:{label:'Bronze',   avg:12.69, lo:12.5, hi:13.5, odds:0.60},
     },
-    bonus: { value: 90, odds: 0.01 }
+    bonus:{value:90, odds:0.01}
   },
   Starter: {
-    name: 'Pokemon Starter Pack', price: 25, ev: 26.25,
-    pool: { S: 162, A: 385, B: 368, C: 278, D: 388 },
-    tiers: {
-      S: { label: 'Shiny',    avg: 188,   lo: 100,  hi: 500,  odds: 0.005 },
-      A: { label: 'Platinum', avg: 50.29, lo: 37.5, hi: 75,   odds: 0.068401 },
-      B: { label: 'Gold',     avg: 29.67, lo: 25,   hi: 37.5, odds: 0.426599 },
-      C: { label: 'Silver',   avg: 21.31, lo: 18.75,hi: 25,   odds: 0.075 },
-      D: { label: 'Bronze',   avg: 14.98, lo: 12.5, hi: 18.75,odds: 0.425 },
+    name:'Pokemon Starter Pack', price:25, ev:26.25,
+    pool:{S:162,A:385,B:368,C:278,D:388},
+    tiers:{
+      S:{label:'Shiny',    avg:188,   lo:100,  hi:500,  odds:0.005},
+      A:{label:'Platinum', avg:50.29, lo:37.5, hi:75,   odds:0.06840},
+      B:{label:'Gold',     avg:29.67, lo:25,   hi:37.5, odds:0.42660},
+      C:{label:'Silver',   avg:21.31, lo:18.75,hi:25,   odds:0.075},
+      D:{label:'Bronze',   avg:14.98, lo:12.5, hi:18.75,odds:0.425},
     },
-    bonus: { value: 125, odds: 0.01 }
+    bonus:{value:125, odds:0.01}
   },
   Pro: {
-    name: 'Pokemon Pro Pack', price: 50, ev: 53.35,
-    pool: { S: 67, A: 169, B: 185, C: 200, D: 368 },
-    tiers: {
-      S: { label: 'Shiny',    avg: 398.05, lo: 200, hi: 1000, odds: 0.005 },
-      A: { label: 'Platinum', avg: 96.84,  lo: 75,  hi: 150,  odds: 0.085420 },
-      B: { label: 'Gold',     avg: 58.4,   lo: 50,  hi: 75,   odds: 0.409580 },
-      C: { label: 'Silver',   avg: 42.8,   lo: 37.5,hi: 50,   odds: 0.075 },
-      D: { label: 'Bronze',   avg: 29.67,  lo: 25,  hi: 37.5, odds: 0.425 },
+    name:'Pokemon Pro Pack', price:50, ev:53.35,
+    pool:{S:67,A:169,B:185,C:200,D:368},
+    tiers:{
+      S:{label:'Shiny',    avg:398.05,lo:200,  hi:1000, odds:0.005},
+      A:{label:'Platinum', avg:96.84, lo:75,   hi:150,  odds:0.08542},
+      B:{label:'Gold',     avg:58.4,  lo:50,   hi:75,   odds:0.40958},
+      C:{label:'Silver',   avg:42.8,  lo:37.5, hi:50,   odds:0.075},
+      D:{label:'Bronze',   avg:29.67, lo:25,   hi:37.5, odds:0.425},
     },
-    bonus: { value: 335, odds: 0.01 }
+    bonus:{value:335, odds:0.01}
   },
   Elite: {
-    name: 'Pokemon Elite Pack', price: 100, ev: 106.50,
-    pool: { S: 35, A: 67, B: 70, C: 99, D: 185 },
-    tiers: {
-      S: { label: 'Shiny',    avg: 1003.17, lo: 400, hi: 2500, odds: 0.005 },
-      A: { label: 'Platinum', avg: 191.78,  lo: 150, hi: 300,  odds: 0.090209 },
-      B: { label: 'Gold',     avg: 115.04,  lo: 100, hi: 150,  odds: 0.404791 },
-      C: { label: 'Silver',   avg: 83.98,   lo: 75,  hi: 100,  odds: 0.075 },
-      D: { label: 'Bronze',   avg: 58.4,    lo: 50,  hi: 75,   odds: 0.425 },
+    name:'Pokemon Elite Pack', price:100, ev:106.50,
+    pool:{S:35,A:67,B:70,C:99,D:185},
+    tiers:{
+      S:{label:'Shiny',    avg:1003.17,lo:400, hi:2500, odds:0.005},
+      A:{label:'Platinum', avg:191.78, lo:150, hi:300,  odds:0.09021},
+      B:{label:'Gold',     avg:115.04, lo:100, hi:150,  odds:0.40479},
+      C:{label:'Silver',   avg:83.98,  lo:75,  hi:100,  odds:0.075},
+      D:{label:'Bronze',   avg:58.4,   lo:50,  hi:75,   odds:0.425},
     },
-    bonus: { value: 650, odds: 0.01 }
+    bonus:{value:650, odds:0.01}
   }
 };
 
-const TIER_EMOJI = { S: '✨', A: '🥈', B: '🥇', C: '🔵', D: '🟤' };
-const TIER_NAME  = { S: 'Shiny', A: 'Platinum', B: 'Gold', C: 'Silver', D: 'Bronze' };
-const TIER_COLOR = { S: '#9f46ff', A: '#c0c0c0', B: '#ffd700', C: '#4a9eff', D: '#cd7f32' };
+// ══════════════════════════════════════════
+//  CARD POOLS — realistic PSA-graded cards
+//  Tier S = Shiny, A = Platinum, B = Gold, C = Silver, D = Bronze
+// ══════════════════════════════════════════
+const CARD_POOLS = {
+  S: [ // Rare chase cards — all packs share shiny pool, values scale with pack
+    {name:'Charizard VMAX',   set:'Shining Fates',          grade:'PSA 10', tcgQuery:'name:"Charizard VMAX" set.id:swsh45'},
+    {name:'Pikachu VMAX',     set:'Vivid Voltage',          grade:'PSA 10', tcgQuery:'name:"Pikachu VMAX" set.id:swsh4'},
+    {name:'Umbreon VMAX',     set:'Evolving Skies',         grade:'PSA 9',  tcgQuery:'name:"Umbreon VMAX" set.id:swsh7'},
+    {name:'Rayquaza VSTAR',   set:'Silver Tempest',         grade:'PSA 10', tcgQuery:'name:"Rayquaza VSTAR" set.id:swsh12'},
+    {name:'Lugia V',          set:'Silver Tempest',         grade:'PSA 10', tcgQuery:'name:"Lugia V" set.id:swsh12'},
+    {name:'Charizard ex',     set:'Obsidian Flames',        grade:'PSA 10', tcgQuery:'name:"Charizard ex" set.id:sv3'},
+    {name:'Mewtwo VSTAR',     set:'Pokémon GO',             grade:'PSA 9',  tcgQuery:'name:"Mewtwo VSTAR" set.id:pgo'},
+    {name:'Giratina VSTAR',   set:'Lost Origin',            grade:'PSA 10', tcgQuery:'name:"Giratina VSTAR" set.id:swsh11'},
+    {name:'Mew VMAX',         set:'Fusion Strike',          grade:'PSA 10', tcgQuery:'name:"Mew VMAX" set.id:swsh8'},
+    {name:'Espeon VMAX',      set:'Evolving Skies',         grade:'PSA 10', tcgQuery:'name:"Espeon VMAX" set.id:swsh7'},
+  ],
+  A: [ // Platinum tier — popular V/GX/EX cards
+    {name:'Charizard GX',     set:'Hidden Fates',           grade:'PSA 9',  tcgQuery:'name:"Charizard-GX" set.id:sm115'},
+    {name:'Pikachu V',        set:'Vivid Voltage',          grade:'PSA 10', tcgQuery:'name:"Pikachu V" set.id:swsh4'},
+    {name:'Gengar VMAX',      set:'Fusion Strike',          grade:'PSA 9',  tcgQuery:'name:"Gengar VMAX" set.id:swsh8'},
+    {name:'Sylveon VMAX',     set:'Evolving Skies',         grade:'PSA 9',  tcgQuery:'name:"Sylveon VMAX" set.id:swsh7'},
+    {name:'Palkia VSTAR',     set:'Astral Radiance',        grade:'PSA 10', tcgQuery:'name:"Palkia VSTAR" set.id:swsh10'},
+    {name:'Eevee VMAX',       set:'Fusion Strike',          grade:'PSA 9',  tcgQuery:'name:"Eevee VMAX" set.id:swsh8'},
+    {name:'Dialga VSTAR',     set:'Astral Radiance',        grade:'PSA 9',  tcgQuery:'name:"Dialga VSTAR" set.id:swsh10'},
+    {name:'Snorlax VMAX',     set:'Vivid Voltage',          grade:'PSA 10', tcgQuery:'name:"Snorlax VMAX" set.id:swsh4'},
+    {name:'Mimikyu VMAX',     set:'Fusion Strike',          grade:'PSA 9',  tcgQuery:'name:"Mimikyu VMAX" set.id:swsh8'},
+    {name:'Suicune V',        set:'Evolving Skies',         grade:'PSA 10', tcgQuery:'name:"Suicune V" set.id:swsh7'},
+  ],
+  B: [ // Gold tier — holo rare V cards
+    {name:'Blastoise V',      set:'Battle Styles',          grade:'PSA 9',  tcgQuery:'name:"Blastoise V" set.id:swsh5'},
+    {name:'Venusaur V',       set:'Celebrations',           grade:'PSA 9',  tcgQuery:'name:"Venusaur V" set.id:cel25'},
+    {name:'Mewtwo V',         set:'Pokémon GO',             grade:'PSA 9',  tcgQuery:'name:"Mewtwo V" set.id:pgo'},
+    {name:'Dragonite V',      set:'Fusion Strike',          grade:'PSA 9',  tcgQuery:'name:"Dragonite V" set.id:swsh8'},
+    {name:'Lapras VMAX',      set:'Sword & Shield',         grade:'PSA 9',  tcgQuery:'name:"Lapras VMAX" set.id:swsh1'},
+    {name:'Leafeon V',        set:'Evolving Skies',         grade:'PSA 9',  tcgQuery:'name:"Leafeon V" set.id:swsh7'},
+    {name:'Glaceon V',        set:'Evolving Skies',         grade:'PSA 9',  tcgQuery:'name:"Glaceon V" set.id:swsh7'},
+    {name:'Flareon V',        set:'Evolving Skies',         grade:'PSA 9',  tcgQuery:'name:"Flareon V" set.id:swsh7'},
+    {name:'Toxtricity VMAX',  set:'Rebel Clash',            grade:'PSA 9',  tcgQuery:'name:"Toxtricity VMAX" set.id:swsh2'},
+    {name:'Decidueye V',      set:'Astral Radiance',        grade:'PSA 9',  tcgQuery:'name:"Decidueye V" set.id:swsh10'},
+  ],
+  C: [ // Silver tier — standard V & holo rares
+    {name:'Pikachu V',        set:'Sword & Shield',         grade:'PSA 8',  tcgQuery:'name:"Pikachu V" set.id:swsh1'},
+    {name:'Arcanine V',       set:'Brilliant Stars',        grade:'PSA 9',  tcgQuery:'name:"Arcanine V" set.id:swsh9'},
+    {name:'Hawlucha V',       set:'Fusion Strike',          grade:'PSA 8',  tcgQuery:'name:"Hawlucha V" set.id:swsh8'},
+    {name:'Greedent V',       set:'Vivid Voltage',          grade:'PSA 9',  tcgQuery:'name:"Greedent V" set.id:swsh4'},
+    {name:'Coalossal VMAX',   set:'Vivid Voltage',          grade:'PSA 8',  tcgQuery:'name:"Coalossal VMAX" set.id:swsh4'},
+    {name:'Jolteon V',        set:'Evolving Skies',         grade:'PSA 8',  tcgQuery:'name:"Jolteon V" set.id:swsh7'},
+    {name:'Vaporeon V',       set:'Evolving Skies',         grade:'PSA 8',  tcgQuery:'name:"Vaporeon V" set.id:swsh7'},
+    {name:'Kangaskhan V',     set:'Fusion Strike',          grade:'PSA 9',  tcgQuery:'name:"Kangaskhan V" set.id:swsh8'},
+    {name:'Ditto V',          set:'Fusion Strike',          grade:'PSA 8',  tcgQuery:'name:"Ditto V" set.id:swsh8'},
+    {name:'Magnezone V',      set:'Astral Radiance',        grade:'PSA 8',  tcgQuery:'name:"Magnezone V" set.id:swsh10'},
+  ],
+  D: [ // Bronze tier — common holo & basic V cards
+    {name:'Charmander',       set:'Scarlet & Violet',       grade:'PSA 8',  tcgQuery:'name:"Charmander" set.id:sv1'},
+    {name:'Squirtle',         set:'Scarlet & Violet',       grade:'PSA 8',  tcgQuery:'name:"Squirtle" set.id:sv1'},
+    {name:'Bulbasaur',        set:'Scarlet & Violet',       grade:'PSA 8',  tcgQuery:'name:"Bulbasaur" set.id:sv1'},
+    {name:'Eevee',            set:'Sword & Shield',         grade:'PSA 9',  tcgQuery:'name:"Eevee" set.id:swsh1'},
+    {name:'Jigglypuff',       set:'Paldea Evolved',         grade:'PSA 9',  tcgQuery:'name:"Jigglypuff" set.id:sv2'},
+    {name:'Snorlax',          set:'Scarlet & Violet',       grade:'PSA 8',  tcgQuery:'name:"Snorlax" set.id:sv1'},
+    {name:'Gengar',           set:'Lost Origin',            grade:'PSA 8',  tcgQuery:'name:"Gengar" set.id:swsh11'},
+    {name:'Dragonite',        set:'Fusion Strike',          grade:'PSA 8',  tcgQuery:'name:"Dragonite" set.id:swsh8'},
+    {name:'Lapras',           set:'Sword & Shield',         grade:'PSA 8',  tcgQuery:'name:"Lapras" set.id:swsh1'},
+    {name:'Machamp',          set:'Vivid Voltage',          grade:'PSA 8',  tcgQuery:'name:"Machamp" set.id:swsh4'},
+  ]
+};
 
-// ── State ──
+const TIER_EMOJI  = {S:'✨',A:'🥈',B:'🥇',C:'🔵',D:'🟤'};
+const TIER_NAME   = {S:'SHINY',A:'PLATINUM',B:'GOLD',C:'SILVER',D:'BRONZE'};
+const TIER_COLOR  = {S:'#9f46ff',A:'#c0c0c0',B:'#ffd700',C:'#4a9eff',D:'#cd7f32'};
+
 let currentPack = 'Beginner';
 let qty = 1;
-let session = { count: 0, spent: 0, returned: 0, tiers: {S:0,A:0,B:0,C:0,D:0}, bonus: 0 };
+let session = {count:0, spent:0, returned:0, tiers:{S:0,A:0,B:0,C:0,D:0}, bonus:0};
 let history = [];
 let isOpening = false;
 
-// ── Init ──
+// image cache
+const imgCache = {};
+
 selectPack('Beginner');
 
+// ── Pack Selection ──
 function selectPack(name) {
   currentPack = name;
   document.querySelectorAll('.pack-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById('btn-' + name).classList.add('active');
+  document.getElementById('btn-'+name).classList.add('active');
   const p = PACKS[name];
   document.getElementById('pack-name-label').textContent = p.name;
-  const pool = p.pool;
+  const pl = p.pool;
   document.getElementById('pack-pool-label').textContent =
-    `${pool.S} Shiny · ${pool.A} Platinum · ${pool.B} Gold · ${pool.C} Silver · ${pool.D} Bronze in pool`;
-  document.getElementById('open-btn').textContent = `Open Pack ($${p.price})`;
+    `${pl.S} Shiny · ${pl.A} Platinum · ${pl.B} Gold · ${pl.C} Silver · ${pl.D} Bronze in pool`;
+  updateOpenBtn();
   renderOdds(p);
   hideResult();
 }
 
+function updateOpenBtn() {
+  const p = PACKS[currentPack];
+  document.getElementById('open-btn').textContent =
+    qty > 1 ? `Open ${qty} Packs ($${p.price*qty})` : `Open Pack ($${p.price})`;
+}
+
 function renderOdds(p) {
-  const colors = { S: '#9f46ff', A: '#c0c0c0', B: '#ffd700', C: '#4a9eff', D: '#cd7f32' };
-  const labels = { S: '✨ Shiny', A: '🥈 Plat', B: '🥇 Gold', C: '🔵 Silver', D: '🟤 Bronze' };
+  const labels = {S:'✨ Shiny',A:'🥈 Plat',B:'🥇 Gold',C:'🔵 Silver',D:'🟤 Bronze'};
   let html = '';
-  for (const [t, d] of Object.entries(p.tiers)) {
-    const pct = (d.odds * 100).toFixed(2);
-    const barW = Math.min(100, d.odds * 200);
+  for (const [t,d] of Object.entries(p.tiers)) {
+    const pct = (d.odds*100).toFixed(2);
+    const barW = Math.min(100, d.odds*200);
     html += `<div class="odds-row">
-      <span class="odds-tier-tag" style="color:${colors[t]}">${labels[t]}</span>
-      <div class="odds-bar-bg"><div class="odds-bar-fill" style="width:${barW}%;background:${colors[t]};opacity:.7"></div></div>
+      <span class="odds-tier-tag" style="color:${TIER_COLOR[t]}">${labels[t]}</span>
+      <div class="odds-bar-bg"><div class="odds-bar-fill" style="width:${barW}%;background:${TIER_COLOR[t]};opacity:.7"></div></div>
       <span class="odds-pct">${pct}%</span>
     </div>`;
   }
@@ -498,16 +488,14 @@ function renderOdds(p) {
 function setQty(n) {
   qty = n;
   document.querySelectorAll('.qty-btn').forEach(b => b.classList.remove('active'));
-  document.getElementById('qty-' + n).classList.add('active');
-  document.getElementById('open-btn').textContent = qty > 1
-    ? `Open ${qty} Packs ($${PACKS[currentPack].price * qty})`
-    : `Open Pack ($${PACKS[currentPack].price})`;
+  document.getElementById('qty-'+n).classList.add('active');
+  updateOpenBtn();
 }
 
+// ── Draw Logic ──
 function drawTier(pack) {
-  const r = Math.random();
-  let cum = 0;
-  for (const [tier, d] of Object.entries(pack.tiers)) {
+  const r = Math.random(); let cum = 0;
+  for (const [tier,d] of Object.entries(pack.tiers)) {
     cum += d.odds;
     if (r < cum) return tier;
   }
@@ -515,173 +503,363 @@ function drawTier(pack) {
 }
 
 function drawValue(pack, tier) {
-  // Use beta distribution approximation to skew toward avg
   const d = pack.tiers[tier];
-  // Simple: random between lo and hi, weighted toward avg using 2 samples
+  // weighted random toward average using beta-like distribution
   const r1 = Math.random(), r2 = Math.random();
-  const raw = d.lo + (r1 + r2) / 2 * (d.hi - d.lo);
-  return Math.round(raw * 100) / 100;
+  const raw = d.lo + ((r1+r2)/2)*(d.hi - d.lo);
+  return Math.round(raw*100)/100;
 }
 
-async function openPack() {
+function drawCard(tier) {
+  const pool = CARD_POOLS[tier];
+  return pool[Math.floor(Math.random()*pool.length)];
+}
+
+// ── Fetch card image from Pokemon TCG API ──
+async function fetchCardImage(card) {
+  const cacheKey = card.name + card.set;
+  if (imgCache[cacheKey]) return imgCache[cacheKey];
+  try {
+    const url = `https://api.pokemontcg.io/v2/cards?q=${encodeURIComponent(card.tcgQuery)}&select=id,name,images&pageSize=3`;
+    const res = await fetch(url, {headers:{'X-Api-Key':''}});
+    const json = await res.json();
+    if (json.data && json.data.length > 0) {
+      const img = json.data[0].images.large || json.data[0].images.small;
+      imgCache[cacheKey] = img;
+      return img;
+    }
+  } catch(e) {}
+  return null;
+}
+
+// ── Open Packs ──
+async function openPacks() {
   if (isOpening) return;
   isOpening = true;
-  const btn = document.getElementById('open-btn');
-  btn.disabled = true;
+  document.getElementById('open-btn').disabled = true;
 
   if (qty === 1) {
     await openOnePack(true);
   } else {
-    // Auto open multiple
     const prog = document.getElementById('auto-progress');
     const fill = document.getElementById('progress-fill');
     const lbl  = document.getElementById('auto-label');
     prog.classList.add('show');
     for (let i = 0; i < qty; i++) {
       lbl.textContent = `Opening pack ${i+1} of ${qty}...`;
-      fill.style.width = (i / qty * 100) + '%';
-      await openOnePack(i === qty - 1);
-      await sleep(180);
+      fill.style.width = (i/qty*100)+'%';
+      await openOnePack(i === qty-1);
+      await sleep(160);
     }
     fill.style.width = '100%';
-    await sleep(300);
+    await sleep(250);
     prog.classList.remove('show');
   }
 
-  btn.disabled = false;
+  document.getElementById('open-btn').disabled = false;
   isOpening = false;
 }
 
 async function openOnePack(showResult) {
-  const pack = PACKS[currentPack];
+  const pack  = PACKS[currentPack];
   const visual = document.getElementById('pack-visual');
 
-  // Shake animation
-  visual.classList.remove('floating', 'shaking');
+  // Shake
+  visual.classList.remove('floating','shaking');
   void visual.offsetWidth;
   visual.classList.add('shaking');
 
-  await sleep(300);
+  await sleep(280);
 
-  const tier = drawTier(pack);
-  const value = drawValue(pack, tier);
+  const tier     = drawTier(pack);
+  const value    = drawValue(pack, tier);
+  const cardData = drawCard(tier);
   const gotBonus = Math.random() < pack.bonus.odds;
 
-  // Update session
+  // Session update
   session.count++;
-  session.spent += pack.price;
+  session.spent   += pack.price;
   session.returned += value;
   if (gotBonus) { session.returned += pack.bonus.value; session.bonus++; }
   session.tiers[tier]++;
 
-  // History
-  history.unshift({ tier, value, bonus: gotBonus, pack: currentPack });
+  history.unshift({tier, value, name:cardData.name, bonus:gotBonus});
   if (history.length > 50) history.pop();
 
-  // Particles for S tier
-  if (tier === 'S') spawnParticles();
-
-  await sleep(350);
+  await sleep(280);
+  visual.classList.remove('shaking');
 
   if (showResult) {
-    showResultCard(tier, value, gotBonus, pack);
-    visual.classList.remove('shaking');
+    // Cinematic for S and A tiers
+    if (tier === 'S') await cinematicShiny();
+    else if (tier === 'A') await cinematicPlatinum(cardData);
+
+    showResultCard(tier, value, cardData, gotBonus, pack);
     visual.classList.add('floating');
+    spawnParticles(tier);
   }
 
   updateStats();
   renderHistory();
 }
 
-function showResultCard(tier, value, bonus, pack) {
-  const card = document.getElementById('result-card');
-  card.className = `result-card show tier-${tier}`;
-  document.getElementById('res-emoji').textContent = TIER_EMOJI[tier];
-  document.getElementById('res-tier').textContent = TIER_NAME[tier].toUpperCase();
+// ══════════════════════════════════════════
+//  CINEMATIC — PLATINUM (Epic Silver)
+// ══════════════════════════════════════════
+async function cinematicPlatinum(card) {
+  const ov = document.getElementById('cinematic');
+  ov.classList.add('show');
+
+  // hide shiny elements
+  document.getElementById('shinyFlash').style.cssText = '';
+  document.getElementById('shinyTitle').style.cssText = '';
+  document.getElementById('shinySubtitle').style.cssText = '';
+
+  // 1) Screen flash
+  const flash = document.getElementById('platFlash');
+  flash.style.cssText = 'animation:platFlash .8s ease-out forwards';
+  await sleep(200);
+
+  // 2) Light beams
+  const beamContainer = document.getElementById('platBeams');
+  beamContainer.innerHTML = '';
+  const beamCount = 12;
+  for (let i = 0; i < beamCount; i++) {
+    const beam = document.createElement('div');
+    beam.className = 'plat-beam';
+    const angle = (i / beamCount) * 360;
+    beam.style.cssText = `
+      transform: translate(-50%, -100%) rotate(${angle}deg);
+      animation: platBeam .6s ease-out ${i*0.04}s forwards;
+      opacity: 0;
+      background: linear-gradient(to bottom, transparent, rgba(192,192,192,${.3 + Math.random()*.5}), rgba(255,255,255,.9), rgba(192,192,192,.4), transparent);
+      width: ${2+Math.random()*3}px;
+    `;
+    beamContainer.appendChild(beam);
+  }
+  await sleep(200);
+
+  // 3) Expanding rings
+  const ring1 = document.getElementById('platRing1');
+  const ring2 = document.getElementById('platRing2');
+  ring1.style.cssText = 'animation:platRing .8s ease-out forwards;border-color:#ffffff88';
+  ring2.style.cssText = 'animation:platRing .8s ease-out .2s forwards;border-color:#c0c0c066;width:500px;height:500px';
+  await sleep(150);
+
+  // 4) Title reveal
+  const title = document.getElementById('platTitle');
+  title.textContent = '✦ PLATINUM ✦';
+  title.style.cssText = `
+    display:block;animation:platText .6s cubic-bezier(.2,0,.3,1.5) forwards;
+    text-shadow:0 0 60px #fff,0 0 100px #c0c0c0,0 0 200px #ffffff66;
+    color:#e8e8e8;
+  `;
+
+  const sub = document.getElementById('platSubtitle');
+  sub.textContent = card.name.toUpperCase();
+  sub.style.cssText = 'animation:platText .5s ease-out .15s forwards';
+
+  // Silver particles burst
+  burstParticles('#c0c0c0','#ffffff','#e8e8e8');
+
+  await sleep(1600);
+
+  // Fade out overlay
+  ov.style.transition = 'opacity .4s';
+  ov.style.opacity = '0';
+  await sleep(420);
+  ov.classList.remove('show');
+  ov.style.opacity = '';
+  ov.style.transition = '';
+
+  // Reset
+  flash.style.cssText=''; ring1.style.cssText=''; ring2.style.cssText='';
+  title.style.cssText=''; sub.style.cssText=''; beamContainer.innerHTML='';
+}
+
+// ══════════════════════════════════════════
+//  CINEMATIC — SHINY (Rainbow Epic)
+// ══════════════════════════════════════════
+async function cinematicShiny() {
+  const ov = document.getElementById('cinematic');
+  ov.classList.add('show');
+
+  // hide platinum elements
+  document.getElementById('platFlash').style.cssText='';
+  document.getElementById('platBeams').innerHTML='';
+  document.getElementById('platRing1').style.cssText='';
+  document.getElementById('platRing2').style.cssText='';
+  document.getElementById('platTitle').style.cssText='';
+  document.getElementById('platSubtitle').style.cssText='';
+
+  // Rainbow flash
+  const flash = document.getElementById('shinyFlash');
+  flash.style.cssText = `
+    opacity:0; animation:platFlash 1s ease-out forwards;
+    background:radial-gradient(ellipse at center,#fff 0%,#9f46ff 20%,#00d4aa 40%,#ffd700 60%,transparent 80%);
+  `;
+
+  // Big star particles
+  burstParticles('#9f46ff','#00d4aa','#ffd700','#ff6b6b','#ffffff');
+  burstParticles('#c97bff','#7ab8ff','#ffd700');
+  await sleep(200);
+
+  const title = document.getElementById('shinyTitle');
+  title.textContent = '✨ S H I N Y ✨';
+  title.style.cssText = `display:block;animation:platText .7s cubic-bezier(.2,0,.3,1.5) forwards;`;
+
+  const sub = document.getElementById('shinySubtitle');
+  sub.textContent = '— ULTRA RARE PULL —';
+  sub.style.cssText = 'animation:platText .6s ease-out .2s forwards;color:#c97bff;';
+
+  await sleep(1800);
+
+  ov.style.transition = 'opacity .5s';
+  ov.style.opacity = '0';
+  await sleep(520);
+  ov.classList.remove('show');
+  ov.style.opacity=''; ov.style.transition='';
+  flash.style.cssText=''; title.style.cssText=''; sub.style.cssText='';
+}
+
+// ── Show Result Card ──
+async function showResultCard(tier, value, cardData, bonus, pack) {
+  const area = document.getElementById('result-area');
+  area.className = `result-area show tier-${tier}`;
+
+  // Reset image area
+  const wrap = document.getElementById('card-img-wrap');
+  wrap.innerHTML = '<div class="card-img-loading" id="card-img-loading">Loading card...</div>';
+  if (tier === 'S') wrap.innerHTML += `<div class="card-grade-badge">✨ ${cardData.grade}</div>`;
+  else if (tier === 'A') wrap.innerHTML += `<div class="card-grade-badge" style="background:#c0c0c0">${cardData.grade}</div>`;
+  else wrap.innerHTML += `<div class="card-grade-badge" style="background:#cd7f32;color:#fff">${cardData.grade}</div>`;
+
+  // Text info
+  document.getElementById('res-tier').textContent = `${TIER_EMOJI[tier]} ${TIER_NAME[tier]}`;
+  document.getElementById('res-name').textContent = cardData.name;
+  document.getElementById('res-set').textContent = cardData.set + ' · ' + cardData.grade;
   document.getElementById('res-value').textContent = `$${value.toFixed(2)}`;
-  document.getElementById('res-label').textContent = `${pack.tiers[tier].label} · ${pack.name}`;
   document.getElementById('res-bonus').innerHTML = bonus
-    ? `<div class="bonus-tag">⭐ Bonus Card! +$${pack.bonus.value}</div>` : '';
+    ? `<div class="result-bonus">⭐ Bonus Card! +$${pack.bonus.value}</div>` : '';
+
+  // Fetch image
+  const imgUrl = await fetchCardImage(cardData);
+  const loading = document.getElementById('card-img-loading');
+  if (imgUrl && loading) {
+    const img = document.createElement('img');
+    img.className = 'card-img';
+    img.src = imgUrl;
+    img.alt = cardData.name;
+    img.onerror = () => { img.replaceWith(fallbackCard(tier, cardData)); };
+    loading.replaceWith(img);
+  } else if (loading) {
+    loading.replaceWith(fallbackCard(tier, cardData));
+  }
+}
+
+function fallbackCard(tier, card) {
+  const el = document.createElement('div');
+  el.className = 'card-img-placeholder';
+  el.style.border = `2px solid ${TIER_COLOR[tier]}`;
+  el.innerHTML = `<div style="text-align:center"><div style="font-size:36px">${TIER_EMOJI[tier]}</div><div style="font-size:11px;color:#9ca3af;margin-top:8px;padding:0 10px">${card.name}</div></div>`;
+  return el;
 }
 
 function hideResult() {
-  document.getElementById('result-card').className = 'result-card';
+  document.getElementById('result-area').className = 'result-area';
 }
 
+// ── Stats ──
 function updateStats() {
-  const n = session.count;
-  const spent = session.spent;
-  const ret   = session.returned;
-  const pnl   = ret - spent;
-  const roe   = spent > 0 ? (pnl / spent * 100) : 0;
-
+  const n = session.count, spent = session.spent, ret = session.returned;
+  const pnl = ret - spent, roe = spent > 0 ? pnl/spent*100 : 0;
   document.getElementById('stat-count').textContent = n;
   document.getElementById('stat-spent').textContent = `$${spent.toFixed(2)}`;
   document.getElementById('stat-return').textContent = `$${ret.toFixed(2)}`;
-
   const pnlEl = document.getElementById('stat-pnl');
-  pnlEl.textContent = (pnl >= 0 ? '+' : '') + `$${pnl.toFixed(2)}`;
-  pnlEl.className = 'stat-value ' + (pnl >= 0 ? 'green' : 'red');
-
+  pnlEl.textContent = (pnl>=0?'+':'')+`$${pnl.toFixed(2)}`;
+  pnlEl.className = 'stat-value '+(pnl>=0?'green':'red');
   const roeEl = document.getElementById('stat-roe');
-  roeEl.textContent = (roe >= 0 ? '+' : '') + roe.toFixed(1) + '%';
-  roeEl.className = 'stat-value ' + (roe >= 0 ? 'green' : 'red');
-
-  // ROE bar (max ±30%)
+  roeEl.textContent = (roe>=0?'+':'')+roe.toFixed(1)+'%';
+  roeEl.className = 'stat-value '+(roe>=0?'green':'red');
   const bar = document.getElementById('roe-bar');
-  const barW = Math.min(100, Math.abs(roe) / 30 * 100);
-  bar.style.width = barW + '%';
-  bar.className = 'roe-bar ' + (roe >= 0 ? 'pos' : 'neg');
-
-  // Dist
+  bar.style.width = Math.min(100,Math.abs(roe)/30*100)+'%';
+  bar.className = 'roe-bar '+(roe>=0?'pos':'neg');
   for (const t of ['S','A','B','C','D']) {
     const cnt = session.tiers[t];
-    document.getElementById('dist-' + t).textContent = cnt;
-    document.getElementById('dpct-' + t).textContent = n > 0 ? (cnt/n*100).toFixed(1)+'%' : '—';
+    document.getElementById('dist-'+t).textContent = cnt;
+    document.getElementById('dpct-'+t).textContent = n>0 ? (cnt/n*100).toFixed(1)+'%' : '—';
   }
   document.getElementById('dist-bonus').textContent = session.bonus;
-  document.getElementById('dpct-bonus').textContent = n > 0 ? (session.bonus/n*100).toFixed(1)+'%' : '—';
+  document.getElementById('dpct-bonus').textContent = n>0 ? (session.bonus/n*100).toFixed(1)+'%' : '—';
 }
 
 function renderHistory() {
   const list = document.getElementById('history-list');
-  if (history.length === 0) {
-    list.innerHTML = '<div class="empty-history">No pulls yet. Open a pack!</div>';
-    return;
-  }
-  list.innerHTML = history.slice(0, 20).map(h => `
+  if (!history.length) { list.innerHTML='<div class="empty-history">No pulls yet. Open a pack!</div>'; return; }
+  list.innerHTML = history.slice(0,25).map(h => `
     <div class="history-item">
       <div class="history-dot dot-${h.tier}"></div>
-      <span class="history-tier hist-${h.tier}">${TIER_EMOJI[h.tier]} ${TIER_NAME[h.tier]}</span>
-      ${h.bonus ? '<span class="history-bonus">+⭐</span>' : ''}
+      <span class="hist-${h.tier}">${TIER_EMOJI[h.tier]}</span>
+      <span class="hist-name">${h.name}</span>
+      ${h.bonus?'<span class="history-bonus-tag">+⭐</span>':''}
       <span class="history-val">$${h.value.toFixed(2)}</span>
     </div>`).join('');
 }
 
-function spawnParticles() {
+// ── Particles ──
+function spawnParticles(tier) {
   const container = document.getElementById('particles');
-  const colors = ['#9f46ff','#c97bff','#00d4aa','#ffd700','#ff6b6b'];
-  for (let i = 0; i < 30; i++) {
+  const colors = tier==='S'
+    ? ['#9f46ff','#c97bff','#00d4aa','#ffd700','#ff6b6b','#ffffff']
+    : tier==='A'
+    ? ['#c0c0c0','#ffffff','#e0e0e0','#a0a0a0']
+    : [TIER_COLOR[tier],'#ffffff'];
+  const count = tier==='S'?40:tier==='A'?28:12;
+  for (let i=0;i<count;i++) {
     const p = document.createElement('div');
-    p.className = 'particle';
-    const size = 4 + Math.random() * 8;
-    const angle = Math.random() * Math.PI * 2;
-    const dist  = 80 + Math.random() * 160;
+    p.className = tier==='S' && Math.random()>.5 ? 'particle star' : 'particle';
+    const size = tier==='S' ? 5+Math.random()*12 : 3+Math.random()*8;
+    const angle = Math.random()*Math.PI*2;
+    const dist  = 60+Math.random()*180;
     p.style.cssText = `
-      width:${size}px; height:${size}px;
+      width:${size}px;height:${size}px;
       background:${colors[Math.floor(Math.random()*colors.length)]};
-      left:50%; top:45%;
+      left:50%;top:42%;
       --tx:${Math.cos(angle)*dist}px;
       --ty:${Math.sin(angle)*dist}px;
-      animation-delay:${Math.random()*0.2}s;
-      animation-duration:${0.7+Math.random()*0.5}s;
+      animation-delay:${Math.random()*.3}s;
+      animation-duration:${.6+Math.random()*.8}s;
+      box-shadow:0 0 ${size}px ${colors[0]};
     `;
     container.appendChild(p);
-    setTimeout(() => p.remove(), 1200);
+    setTimeout(()=>p.remove(), 1400);
   }
 }
 
-function sleep(ms) { return new Promise(r => setTimeout(r, ms)); }
+function burstParticles(...colors) {
+  const container = document.getElementById('particles');
+  for (let i=0;i<25;i++) {
+    const p = document.createElement('div');
+    p.className = Math.random()>.5?'particle star':'particle';
+    const size = 4+Math.random()*10;
+    const angle = Math.random()*Math.PI*2;
+    const dist  = 100+Math.random()*200;
+    p.style.cssText = `
+      width:${size}px;height:${size}px;
+      background:${colors[Math.floor(Math.random()*colors.length)]};
+      left:50%;top:50%;
+      --tx:${Math.cos(angle)*dist}px;
+      --ty:${Math.sin(angle)*dist}px;
+      animation-delay:${Math.random()*.2}s;
+      animation-duration:${.8+Math.random()*.6}s;
+    `;
+    container.appendChild(p);
+    setTimeout(()=>p.remove(),1600);
+  }
+}
+
+function sleep(ms){return new Promise(r=>setTimeout(r,ms))}
 </script>
 </body>
 </html>
